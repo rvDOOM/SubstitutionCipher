@@ -1,6 +1,5 @@
 /*TODO
  * Refine the conversion from cipher text to plain text to decode the message in the text file
- * Implement a method that uses a plainText unordered map to generate the key
  * Maybe add a way to print out plain text onto a file?
  */
 
@@ -15,13 +14,12 @@ using namespace std;
 class SubstitutionCipher {
 private:
     unordered_map<char, double> cipherTextFreq;     //hash map holding cipher text
-//    unordered_map<char, char> plainText;            //hash map holding plain text conversion
+    unordered_map<char, char> plainText;            //hash map holding plain text conversion
     string cipherText;                              //string that holds contents of file
     string fileName;                                //holds name of file to be read
     double cipherTextCount;                         //Keeps track of character count(not including whitespace);
     const char letterFreqAnalysis[24] = {'e', 't', 'a', 'o', 'i', 'n', 's', 'h', 'r', 'd', 'l', 'c', 'u', 'm', 'w', 'f',
                                          'g', 'y', 'p', 'b', 'v', 'k', 'x', 'j'};
-    char plaintTextAnalysis[24];
 
 public:
     SubstitutionCipher(string fName);
@@ -38,15 +36,17 @@ public:
 
     void displayCipherPlainTextKey();       //Displays cipher to plain text conversion
 
+
+
 };
 
-//TODO: commented code is for implementation of second unordered map
+
 SubstitutionCipher::SubstitutionCipher(string fName) {
     cipherTextCount = 0;
     fileName = fName;
 
-//    for (char text: letterFreqAnalysis)
-//        plainText.insert(make_pair(text, NULL));
+    for (char text: letterFreqAnalysis)
+        plainText.insert(make_pair(text, NULL));
 }
 
 /*
@@ -86,7 +86,7 @@ void SubstitutionCipher::getFileInput() {
 //Calculates the frequency of each character in the hash table
 void SubstitutionCipher::getCipherTextFreq(char k) {
     auto index = cipherTextFreq.find(k);
-    index->second = (index->second / cipherTextCount) * 100;
+    index->second /= cipherTextCount;
 }
 
 void SubstitutionCipher::displayCipherTextFreq() {
@@ -98,12 +98,10 @@ void SubstitutionCipher::displayCipherTextFreq() {
 
 }
 
-
 void SubstitutionCipher::displayPlainText() {
 
-    for (char traverse : plaintTextAnalysis) {
-        cout << traverse << endl;
-    }
+    for (auto &display: plainText)
+        cout << display.first << ' ' << display.second << '\n';
 
 
 }
@@ -117,37 +115,32 @@ void SubstitutionCipher::displayPlainText() {
  * run getFileInput() outside of loops to get cipherTextFreq map back
  * display plain text
  */
-void SubstitutionCipher::setPlainText() {
-
-
+void SubstitutionCipher::setPlainText(){
     char key;
     double max;
+    int i = 0;
 
-    for (char& plainTextTraverse : plaintTextAnalysis) {
+    for(auto plainTextTraverse : plainText){
         max = 0.0;
-        for (auto cipherTraverse: cipherTextFreq) {
-            if (cipherTraverse.second > max) {
-                max = cipherTraverse.second;
-                key = cipherTraverse.first;
+        for(auto cipherTextTraverse : cipherTextFreq){
+            if(cipherTextTraverse.second > max){
+                max = cipherTextTraverse.second;
+                key = cipherTextTraverse.first;
             }
         }
 
-        plainTextTraverse = key;
+        auto find = plainText.find(letterFreqAnalysis[i]);
+        find->second = key;
         cipherTextFreq.erase(key);
-
+        i++;
     }
-
-    getFileInput();
-    displayPlainText();
-}
+};
 
 
 void SubstitutionCipher::displayCipherPlainTextKey(){
-
     cout << "Cipher Text -----> Plain Text" << endl;
-    for(int i = 0; i < sizeof(plaintTextAnalysis); i++){
-        cout << "\t" << plaintTextAnalysis[i] << "\t\t\t\t\t" << letterFreqAnalysis [i] << endl;
-    }
+    for(auto traverse : plainText)
+        cout << "\t" << traverse.second << "\t\t\t\t\t" << traverse.first << endl;
 }
 
 
@@ -156,6 +149,7 @@ int main() {
     sub.getFileInput();
     sub.displayCipherTextFreq();
     sub.setPlainText();
+    cout << endl;
     sub.displayCipherPlainTextKey();
 
 
