@@ -1,7 +1,6 @@
-/*TODO
- * Refine the conversion from cipher text to plain text to decode the message in the text file
- * Maybe add a way to print out plain text onto a file?
- */
+//TODO refine cipher text conversion to display correct output
+
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -36,6 +35,8 @@ public:
     void displayCipherPlainTextKey();       //Displays cipher to plain text conversion
 
     void driver();
+
+    void finalDisplay();
 };
 
 
@@ -140,14 +141,39 @@ void SubstitutionCipher::displayCipherPlainTextKey() {
         if (traverse.first == 'e')
             cout << "\t" << traverse.second << "\t\t\t\t" << find->second << "\t\t\t\t\t" << traverse.first << endl;
         else
-            cout << "\t"<< traverse.second << "\t\t\t\t" << find->second << "\t\t\t\t" << traverse.first << endl;
+            cout << "\t" << traverse.second << "\t\t\t\t" << find->second << "\t\t\t\t" << traverse.first << endl;
     }
 }
 
-void SubstitutionCipher::driver(){
+void SubstitutionCipher::driver() {
     getFileInput();
     setPlainText();
     displayCipherPlainTextKey();
+    finalDisplay();
+}
+
+
+void SubstitutionCipher::finalDisplay() {
+    ifstream inFile;
+    string decrypt;
+    char key;
+
+    inFile.open(fileName, ios::in);
+    while (!inFile.eof()) {
+        getline(inFile, decrypt);
+        for (int i = 0; i < decrypt.size(); i++) {
+            if (decrypt[i] == ' ')
+                cout << ' ';
+            else {
+                for (auto plainTraverse: plainText) {
+                    if (plainTraverse.second == decrypt[i]) {
+                        cout << plainTraverse.first;
+                    }
+                }
+            }
+        }
+        cout << endl;
+    }
 }
 
 int main() {
