@@ -1,5 +1,3 @@
-//TODO refine cipher text conversion to display correct output
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -16,14 +14,14 @@ private:
     string fileName;                                //holds name of file to be read
     double cipherTextCount;                         //Keeps track of character count(not including whitespace);
     const char letterFreqAnalysis[26] = {'e', 't', 'a', 'n', 'o', 'i', 'h', 's', 'r', 'c', 'd', 'l', 'm', 'g', 'p', 'u',
-                                         'f', 'y', 'w', 'b', 'v', 'z', 'x','j', 'k', 'q'};
+                                         'f', 'y', 'w', 'b', 'v', 'z', 'k', 'j', 'x', 'q'};
 
 public:
     SubstitutionCipher(string fName);
 
     void getFileInput();                    //Populates cipherText with file contents
 
-    void getCipherTextFreq(char k);         //Calculates the frequency of a character
+    void setCipherTextFreq(char k);         //Calculates the frequency of a character
 
     void setPlainText();                    //This works. Uses array to get plaintext
 
@@ -31,38 +29,32 @@ public:
 
     void displayPlainText();              //Works with getMaxFreq()
 
+    void displayCipherText();
+
     void displayCipherPlainTextKey();       //Displays cipher to plain text conversion
 
     void driver();
 
-    void finalDisplay();
 };
 
-
-SubstitutionCipher::SubstitutionCipher(string fName) {
+//Constructor
+SubstitutionCipher::SubstitutionCipher(string fileName) {
     cipherTextCount = 0;
-    fileName = std::move(fName);
-
-    for (char text: letterFreqAnalysis)
-        plainText.insert(make_pair(text, NULL));
+    this->fileName = fileName;
 }
 
-/*
-* Insert data from file to string cipherText
-* Use the cipherText string to insert values into hash table one by one
-*       If(character doesn't appear in hash table) Make new entry && increment cipherTextCount
-*       else increment character's("key") secondary entry in hash table && increment cipherTextCount
-* Remove ' ' total from cipherTextCount to prevent spaces from being included in the frequency calculation
-* Remove ' ' from hash table
-* Iterate through hash table and call on getCipherTextFreq()
-*/
 void SubstitutionCipher::getFileInput() {
     cipherTextCount = 0;
     ifstream inFile;
     inFile.open(fileName, ios::in);
 
+    //Iterate through file and get contents string by string
     while (!inFile.eof()) {
         getline(inFile, cipherText);
+        /* Iterate through string
+         * If char is not in cipher text hashmap, create key && element = 1, count++
+         * else increment element in key by 1, count++
+         */
         for (int i = 0; cipherText[i]; i++) {
             if (cipherTextFreq.find(cipherText[i]) == cipherTextFreq.end()) {
                 cipherTextFreq.insert(make_pair(cipherText[i], 1));
@@ -73,17 +65,19 @@ void SubstitutionCipher::getFileInput() {
             }
         }
     }
+    //Remove all ' ' values from hash map and count
     auto result = cipherTextFreq.find(' ');
     cipherTextCount -= result->second;
     cipherTextFreq.erase(' ');
 
+    //iterate through hash map and calculate letter analysis frequency
     for (auto &calc: cipherTextFreq) {
-        getCipherTextFreq(calc.first);
+        setCipherTextFreq(calc.first);
     }
 }
 
 //Calculates the frequency of each character in the hash table
-void SubstitutionCipher::getCipherTextFreq(char k) {
+void SubstitutionCipher::setCipherTextFreq(char k) {
     auto index = cipherTextFreq.find(k);
     index->second /= cipherTextCount;
 }
@@ -94,43 +88,40 @@ void SubstitutionCipher::displayCipherTextFreq() {
     cout << "Cipher Text Count: " << cipherTextCount;
 }
 
-void SubstitutionCipher::displayPlainText() {
-    for (auto &display: plainText)
-        cout << display.first << ' ' << display.second << '\n';
-}
 
-/*
- * Determines the plain text of the file
- * Traverse through both the plainTextAnalysis array and cipherTextFreq map
- * max counter set(and reset) at 0 at the start of plainTextAnalysis traversal
- * get the max value from cipherTextFreq mapped values
- * grab max value and store in key variable
- * erase key entry from cipherTextFreq to avoid encountering entry in next loop
- * run getFileInput() outside of loops to get cipherTextFreq map back
- * display plain text
- */
 void SubstitutionCipher::setPlainText() {
     char key;
     double max;
     int i = 0;
 
-    do {
-        for (auto plainTextTraverse: plainText) {
-            max = 0.0;
-            for (auto cipherTextTraverse: cipherTextFreq) {
-                if (cipherTextTraverse.second > max) {
-                    max = cipherTextTraverse.second;
-                    key = cipherTextTraverse.first;
-                }
-            }
+    /* inserts letter frequncy array into plain text hash map
+     * stops when j exceeds number of keys in cipher text hash map
+     */
+    for (int j = 0; j < cipherTextFreq.size(); j++)
+        plainText.insert(make_pair(letterFreqAnalysis[j], NULL));
 
-            auto find = plainText.find(letterFreqAnalysis[i]);
-            find->second = key;
-            cipherTextFreq.erase(key);
-            i++;
+    //Get key with highest frequency in cipher text hash map
+    //set max = 0 when previous max has been found
+    for (auto plainTextTraverse: plainText) {
+        max = 0.0;
+
+        for (auto cipherTextTraverse: cipherTextFreq) {
+            if (cipherTextTraverse.second > max) {
+                max = cipherTextTraverse.second;
+                key = cipherTextTraverse.first;
+            }
         }
-    }while(i < sizeof(letterFreqAnalysis));
-    getFileInput();
+
+        /* Add key of highest frequency in cipher text as element to plain text
+         * plain text key is determined by order of hard coded letterFrequncyAnalysis[]
+         * erase highest frequncy key from cipher text hash map, i++
+         */
+        auto find = plainText.find(letterFreqAnalysis[i]);
+        find->second = key;
+        cipherTextFreq.erase(key);
+        i++;
+    }
+    getFileInput();             //repopulate cipherTextFrequency hash map
 }
 
 void SubstitutionCipher::displayCipherPlainTextKey() {
@@ -144,17 +135,26 @@ void SubstitutionCipher::displayCipherPlainTextKey() {
         else
             cout << "\t" << traverse.second << "\t\t\t\t" << find->second << "\t\t\t\t" << traverse.first << endl;
     }
+    cout << endl;
 }
 
-void SubstitutionCipher::driver() {
-    getFileInput();
-    setPlainText();
-    displayCipherPlainTextKey();
-    finalDisplay();
+void SubstitutionCipher::displayCipherText() {
+    ifstream inFile;
+    string display;
+    char key;
+
+
+    cout << "Cipher Text:" << endl;
+
+    inFile.open(fileName, ios::in);
+    while (!inFile.eof()) {
+        getline(inFile, display);
+        cout << display << endl;
+    }
 }
 
 
-void SubstitutionCipher::finalDisplay() {
+void SubstitutionCipher::displayPlainText() {
 
     ifstream inFile;
     string decrypt;
@@ -179,6 +179,15 @@ void SubstitutionCipher::finalDisplay() {
         cout << endl;
     }
 }
+
+void SubstitutionCipher::driver() {
+    getFileInput();
+    displayCipherText();
+    setPlainText();
+    displayCipherPlainTextKey();
+    displayPlainText();
+}
+
 
 int main() {
 
