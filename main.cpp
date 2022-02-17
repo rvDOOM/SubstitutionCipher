@@ -1,6 +1,5 @@
 //TODO refine cipher text conversion to display correct output
 
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -16,8 +15,8 @@ private:
     string cipherText;                              //string that holds contents of file
     string fileName;                                //holds name of file to be read
     double cipherTextCount;                         //Keeps track of character count(not including whitespace);
-    const char letterFreqAnalysis[24] = {'e', 't', 'a', 'o', 'i', 'n', 's', 'h', 'r', 'd', 'l', 'c', 'u', 'm', 'w', 'f',
-                                         'g', 'y', 'p', 'b', 'v', 'k', 'x', 'j'};
+    const char letterFreqAnalysis[26] = {'e', 't', 'a', 'n', 'o', 'i', 'h', 's', 'r', 'c', 'd', 'l', 'm', 'g', 'p', 'u',
+                                         'f', 'y', 'w', 'b', 'v', 'z', 'x','j', 'k', 'q'};
 
 public:
     SubstitutionCipher(string fName);
@@ -115,20 +114,22 @@ void SubstitutionCipher::setPlainText() {
     double max;
     int i = 0;
 
-    for (auto plainTextTraverse: plainText) {
-        max = 0.0;
-        for (auto cipherTextTraverse: cipherTextFreq) {
-            if (cipherTextTraverse.second > max) {
-                max = cipherTextTraverse.second;
-                key = cipherTextTraverse.first;
+    do {
+        for (auto plainTextTraverse: plainText) {
+            max = 0.0;
+            for (auto cipherTextTraverse: cipherTextFreq) {
+                if (cipherTextTraverse.second > max) {
+                    max = cipherTextTraverse.second;
+                    key = cipherTextTraverse.first;
+                }
             }
-        }
 
-        auto find = plainText.find(letterFreqAnalysis[i]);
-        find->second = key;
-        cipherTextFreq.erase(key);
-        i++;
-    }
+            auto find = plainText.find(letterFreqAnalysis[i]);
+            find->second = key;
+            cipherTextFreq.erase(key);
+            i++;
+        }
+    }while(i < sizeof(letterFreqAnalysis));
     getFileInput();
 }
 
@@ -154,9 +155,12 @@ void SubstitutionCipher::driver() {
 
 
 void SubstitutionCipher::finalDisplay() {
+
     ifstream inFile;
     string decrypt;
     char key;
+
+    cout << "Plain Text:" << endl;
 
     inFile.open(fileName, ios::in);
     while (!inFile.eof()) {
