@@ -168,13 +168,10 @@ void SubstitutionCipher::displayPlainText() {
         for (int i = 0; i < decrypt.size(); i++) {
             if (decrypt[i] == ' ')
                 cout << ' ';
-            else {
-                for (auto plainTraverse: plainText) {
-                    if (plainTraverse.second == decrypt[i]) {
+            else
+                for (auto plainTraverse: plainText)
+                    if (plainTraverse.second == decrypt[i])
                         cout << plainTraverse.first;
-                    }
-                }
-            }
         }
         cout << endl;
     }
